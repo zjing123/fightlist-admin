@@ -18,4 +18,14 @@ Route::get('/', function () {
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
+
+
+//    Route::middleware(['admin.user'])->group(function (){
+//
+//        Route::resource('questions', 'Voyager\QuestionsController');
+//    });
+
+//    Route::group(['middleware' => 'admin.user'], function () {
+//        Route::resource('questions', 'Voyager\QuestionsController');
+//    });
 });
