@@ -11,8 +11,18 @@ class Question extends Model
 {
     use Translatable;
 
+    public function group()
+    {
+        return $this->belongsTo(QuestionGroup::class);
+    }
+
     public function answers()
     {
         return $this->hasMany(Answer::class);
+    }
+
+    public function fightRecords()
+    {
+        return $this->belongsToMany(FightRecord::class);
     }
 }

@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Api\Helpers\Api\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Question;
+use App\Models\QuestionGroup;
 use Response;
 
 class QuestionController extends Controller
 {
+    use ApiResponse;
+
     public function index()
     {
         $questions = [
@@ -114,7 +118,12 @@ class QuestionController extends Controller
                 ]
             ]
         ];
-        
-        return Response::json($questions);
+
+        $data = [
+            'questions' => $questions,
+            'group' => 1
+        ];
+
+        return $this->success($data);
     }
 }
