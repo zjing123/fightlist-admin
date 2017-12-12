@@ -22,6 +22,16 @@ class FightController extends Controller
         $this->model = $fight;
     }
 
+    public function index(Request $request)
+    {
+        $fights = $request->user()->fights()->with('user')->get();
+        $fightings = $request->user()->fightings()->with('user')->get();
+        return $this->success([
+            'fights' => $fights,
+            'fightings' => $fightings
+        ]);
+    }
+
     public function store(Request $request)
     {
         if ($request->user()->isFight( $request->group ) ) {

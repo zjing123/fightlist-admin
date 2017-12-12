@@ -18,7 +18,7 @@ class Fight extends Model
 
     public function records()
     {
-        return $this->hasMany(FightRecord::class);
+        return $this->hasMany(FightRecord::class, 'fight_id');
     }
 
     public function question()
