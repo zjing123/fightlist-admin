@@ -24,7 +24,7 @@ class FightController extends Controller
 
     public function index(Request $request)
     {
-        $fights = $request->user()->fights()->with('user')->get();
+        $fights = $request->user()->fights()->with('user')->take(5)->get();
         $fightings = $request->user()->fightings()->with('user')->get();
         return $this->success([
             'fights' => $fights,
