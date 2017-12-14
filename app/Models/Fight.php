@@ -25,4 +25,17 @@ class Fight extends Model
     {
         return $this->belongsToMany(Question::class);
     }
+
+    public function isCompleted()
+    {
+        $questionCount = Question::where('group_id', $this->group_id)->count();
+        $finishedCount = $this->records()->count();
+
+        return $questionCount === $finishedCount;
+    }
+
+    public function isRecord($question_id)
+    {
+        return $this->records->contains('question_id', $question_id);
+    }
 }

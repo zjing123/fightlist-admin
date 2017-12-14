@@ -21,13 +21,19 @@ class FightRecordController extends Controller
     public function store(Request $request)
     {
         $fight = $request->user()->fights()->find($request->fight_id);
-        //$record = $fight->records()->create( $request->only($this->model->fillable) );
-        $record = $fight->records()->create([
-            'question_id' => $request->question_id,
-            'answers' => serialize($request->answers),
-            'score' => 1,
-            'finished' => $request->finished
-        ]);
-        return $record->id;
+        if(!$fight->isCompleted() && !$fight->isRecord($request->question_id)) {
+            $record = $fight->records()->create([
+                'question_id' => $request->question_id,
+                'answers' => serialize($request->answers),
+                'score' => 1,
+                'finished' => $request->finished
+            ]);
+
+            if ($record) {
+                return $this->success(['finished' => true]);
+            }
+        }
+
+        return $this->success(['finished' => false]);
     }
 }
