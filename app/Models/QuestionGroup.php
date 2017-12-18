@@ -22,4 +22,9 @@ class QuestionGroup extends Model
         $count = $this->questions()->count();
         return $count;
     }
+
+    public function getGroup($userId)
+    {
+
+    }
 }

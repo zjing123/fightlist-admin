@@ -25,4 +25,13 @@ class Question extends Model
     {
         return $this->belongsToMany(FightRecord::class);
     }
+
+    public function getNewQuestion()
+    {
+        DB::table('question_group')
+            ->leftJoin('fights', 'question_group.id', '=', 'fights.group_id')
+            ->where('fights.group_id is null')
+            ->task(1)
+            ->get();
+    }
 }

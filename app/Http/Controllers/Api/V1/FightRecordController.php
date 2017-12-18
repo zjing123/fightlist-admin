@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Api\Helpers\Api\ApiResponse;
 use App\Models\FightRecord;
+use App\Models\QuestionGroup;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use DB;
 
 class FightRecordController extends Controller
 {
@@ -16,6 +18,11 @@ class FightRecordController extends Controller
     public function __construct(FightRecord $record)
     {
         $this->model = $record;
+    }
+
+    public function index(Request $request)
+    {
+
     }
 
     public function store(Request $request)
