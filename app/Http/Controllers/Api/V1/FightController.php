@@ -34,14 +34,13 @@ class FightController extends Controller
 
     public function store(Request $request)
     {
-        $groupId = 1;
-        $lastFight = $request->user()->fights()->orderBy('group_id', 'desc')->first();
-        if (!empty($lastFight)) {
-            $groupId = $lastFight->group_id + 1;
-        }
+        $usedGroupIds = $request->user()->fights()->pluck('group_id');
+        $groupId = DB::table('question_groups')
+            ->whereNotIn('id', $usedGroupIds)
+            ->value('id');
 
-        if (!QuestionGroup::find($groupId)) {
-            return $this->message('没有更多的问题了');
+        if (empty($groupId)) {
+            return $this->error('没有更多的问题了');
         }
 
         //DB::connection()->enableQueryLog();
@@ -57,24 +56,22 @@ class FightController extends Controller
             'group' => $groupId
         ];
 
-        $fight = $request->user()->fights()->create( [
-            'to_user_id' => $request->to_user_id || 0,
-            'type' => $request->type,
-            'group_id' => $data['group'],
-            'score' => 0
-        ]);
-
-        if ( $fight->id ) {
-            $data['fight_id'] = $fight->id;
-            return $this->success($data);
-        } else {
-            return $this->message('参数错误！');
-        }
-        
         if (!$request->user()->isFight( $data['group'] ) ) {
+            $fight = $request->user()->fights()->create( [
+                'to_user_id' => $request->to_user_id || 0,
+                'type' => $request->type,
+                'group_id' => $data['group'],
+                'score' => 0
+            ]);
 
+            if ( $fight->id ) {
+                $data['fight_id'] = $fight->id;
+                return $this->success($data);
+            } else {
+                return $this->error('参数错误！');
+            }
         } else {
-            return $this->message('发生错误', 'error');
-        };
+            return $this->error('发生错误');
+        }
     }
 }

@@ -71,6 +71,12 @@ trait ApiResponse
         return $this->status( $status, compact('data') );
     }
 
+    public function error( $message )
+    {
+        return $this->message( $message, 'error' );
+    }
+
+
     public function notFond( $message = 'Not Fond!')
     {
         return $this->setStatusCode( FoundationResponse::HTTP_NOT_FOUND )->failed( $message );
