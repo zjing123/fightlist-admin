@@ -17,7 +17,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(['as' => 'api.', 'namespace' => 'Api\V1', 'middleware' => 'auth:api'], function () {
+Route::group(['as' => 'api.', 'namespace' => 'Api\V1', 'middleware' => ['auth:api', 'cross']], function () {
     Route::resource('questions', 'QuestionController');
     Route::resource('fights', 'FightController');
     Route::resource('fightrecords', 'FightRecordController');
