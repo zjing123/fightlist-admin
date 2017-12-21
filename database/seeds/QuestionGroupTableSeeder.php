@@ -11,6 +11,8 @@ class QuestionGroupTableSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('question_group')->insert();
+        for ($i = 1; $i <= 10; $i++) {
+            DB::table('question_group')->insert([]);
+        }
     }
 }

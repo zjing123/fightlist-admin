@@ -32,15 +32,37 @@ class FightRecordController extends Controller
             $record = $fight->records()->create([
                 'question_id' => $request->question_id,
                 'answers' => serialize($request->answers),
-                'score' => 1,
+                'score' => $this->getTotal($request->answers),
                 'finished' => $request->finished
             ]);
 
             if ($record) {
+                if ($fight->isCompleted()) {
+                    $records = $fight->records()->get(['score']);
+                    $total = 0;
+                    foreach ($records as $record) {
+                        $total += $record->score;
+                    }
+
+                    $fight->score = $total;
+                    $fight->save();
+                }
+
                 return $this->success(['finished' => true]);
             }
         }
 
         return $this->success(['finished' => false]);
+    }
+
+
+    protected function getTotal($answers)
+    {
+        $total = 0;
+        foreach ($answers as $answer) {
+            $total += $answer['score'];
+        }
+
+        return $total;
     }
 }

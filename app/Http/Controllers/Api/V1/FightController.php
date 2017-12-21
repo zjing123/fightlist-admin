@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\Question;
 use App\Models\QuestionGroup;
 use Illuminate\Cache\Repository;
 use Illuminate\Http\Request;
@@ -74,4 +75,30 @@ class FightController extends Controller
             return $this->error('发生错误');
         }
     }
+
+    public function show(Request $request)
+    {
+        $fightRecords = Fight::find((int)$request->fight)->records;
+        if($fightRecords) {
+            $results = [];
+            foreach ($fightRecords as $record) {
+                $result = [];
+                $question = Question::find($record->question_id);
+                if ($question) {
+                    $result['id'] = $question->id;
+                    $result['title'] = $question->title;
+                    $result['answers'] = unserialize($record->answers);
+                    $result['right'] = $question->answers()->get(['title', 'score']);
+                    $results[] = $result;
+                } else {
+                    continue;
+                }
+            }
+
+            return $this->success(['results' => $results]);
+        } else {
+            return $this->error('没有找到记录');
+        }
+    }
+
 }
