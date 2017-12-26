@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateAnswersTable extends Migration
+class CreateFightTranslationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,14 @@ class CreateAnswersTable extends Migration
      */
     public function up()
     {
-        Schema::create('answers', function (Blueprint $table) {
+        Schema::create('fight_translations', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('title');
-            $table->integer('question_id')->unsigned();
-            $table->integer('score')->default(1);
+            $table->integer('entry_id')->unsigned();
+            $table->string('locale');
+            $table->text('value');
             $table->timestamps();
-            $table->index('title');
+            $table->index(['entry_id', 'locale']);
+            $table->unique(['entry_id', 'locale']);
         });
     }
 
@@ -30,6 +31,6 @@ class CreateAnswersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('answers');
+        Schema::dropIfExists('fight_translations');
     }
 }

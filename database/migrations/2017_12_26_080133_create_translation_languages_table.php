@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateAnswersTable extends Migration
+class CreateTranslationLanguagesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,11 @@ class CreateAnswersTable extends Migration
      */
     public function up()
     {
-        Schema::create('answers', function (Blueprint $table) {
+        Schema::create('translation_languages', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('locale');
             $table->string('title');
-            $table->integer('question_id')->unsigned();
-            $table->integer('score')->default(1);
             $table->timestamps();
-            $table->index('title');
         });
     }
 
@@ -30,6 +28,6 @@ class CreateAnswersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('answers');
+        Schema::dropIfExists('translation_languages');
     }
 }

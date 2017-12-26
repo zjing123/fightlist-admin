@@ -22,15 +22,15 @@
                 <div class="panel panel-bordered">
                     <!-- form start -->
                     <form role="form"
-                            class="form-edit-add"
-                            action="@if(isset($dataTypeContent->id)){{ route('voyager.'.$dataType->slug.'.update', $dataTypeContent->id) }}@else{{ route('voyager.'.$dataType->slug.'.store') }}@endif"
-                            method="POST" enctype="multipart/form-data">
+                          class="form-edit-add"
+                          action="@if(isset($dataTypeContent->id)){{ route('voyager.'.$dataType->slug.'.update', $dataTypeContent->id) }}@else{{ route('voyager.'.$dataType->slug.'.store') }}@endif"
+                          method="POST" enctype="multipart/form-data">
                         <!-- PUT Method if we are editing -->
-                        @if(isset($dataTypeContent->id))
-                            {{ method_field("PUT") }}
-                        @endif
+                    @if(isset($dataTypeContent->id))
+                        {{ method_field("PUT") }}
+                    @endif
 
-                        <!-- CSRF TOKEN -->
+                    <!-- CSRF TOKEN -->
                         {{ csrf_field() }}
 
                         <div class="panel-body">
@@ -45,13 +45,13 @@
                                 </div>
                             @endif
 
-                            <!-- Adding / Editing -->
+                        <!-- Adding / Editing -->
                             @php
                                 $dataTypeRows = $dataType->{(isset($dataTypeContent->id) ? 'editRows' : 'addRows' )};
                             @endphp
 
                             @foreach($dataTypeRows as $row)
-                                <!-- GET THE DISPLAY OPTIONS -->
+                            <!-- GET THE DISPLAY OPTIONS -->
                                 @php
                                     $options = json_decode($row->details);
                                     $display_options = isset($options->display) ? $options->display : NULL;
@@ -85,9 +85,9 @@
 
                     <iframe id="form_target" name="form_target" style="display:none"></iframe>
                     <form id="my_form" action="{{ route('voyager.upload') }}" target="form_target" method="post"
-                            enctype="multipart/form-data" style="width:0;height:0;overflow:hidden">
+                          enctype="multipart/form-data" style="width:0;height:0;overflow:hidden">
                         <input name="image" id="upload_file" type="file"
-                                 onchange="$('#my_form').submit();this.value='';">
+                               onchange="$('#my_form').submit();this.value='';">
                         <input type="hidden" name="type_slug" id="type_slug" value="{{ $dataType->slug }}">
                         {{ csrf_field() }}
                     </form>
@@ -140,7 +140,7 @@
             });
 
             @if ($isModelTranslatable)
-                $('.side-body').multilingual({"editing": true});
+            $('.side-body').multilingual({"editing": true});
             @endif
 
             $('.side-body input[data-slug-origin]').each(function(i, el) {

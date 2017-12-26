@@ -15,11 +15,11 @@ class CreateFightsTable extends Migration
     {
         Schema::create('fights', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('user_id');
-            $table->integer('to_user_id');
-            $table->integer('type')->default(1);
+            $table->integer('user_id')->unsigned();
+            $table->integer('to_user_id')->unsigned();
+            $table->integer('type')->unsigned()->default(1);
             $table->integer('score');
-            $table->integer('group_id');
+            $table->integer('group_id')->unsigned();
             $table->index('user_id');
             $table->index('to_user_id');
             $table->index(['user_id', 'type']);
