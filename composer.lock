@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "ac81bf8ed407eb96776e30891b80c8a7",
+    "content-hash": "2ce30d29a2ca9805fc5e6c874566c4d6",
     "packages": [
         {
             "name": "arrilot/laravel-widgets",
@@ -2939,6 +2939,44 @@
                 "uuid"
             ],
             "time": "2017-09-22T20:46:04+00:00"
+        },
+        {
+            "name": "rny/zhconverter",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rny/ZhConverter.git",
+                "reference": "297928261a2d42eb6fec0a320fddea214b163ae6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://files.phpcomposer.com/files/rny/ZhConverter/297928261a2d42eb6fec0a320fddea214b163ae6.zip",
+                "reference": "297928261a2d42eb6fec0a320fddea214b163ae6",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.0.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Rny\\ZhConverter\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "RNY"
+                }
+            ],
+            "description": "convert between Simplified Chinese(zh-Hans) and Traditional Chinese(zh-Hant)",
+            "keywords": [
+                "Chinese"
+            ],
+            "time": "2016-10-30T16:09:48+00:00"
         },
         {
             "name": "seld/cli-prompt",

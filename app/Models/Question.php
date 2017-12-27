@@ -26,6 +26,11 @@ class Question extends Model
         return $this->belongsToMany(FightRecord::class);
     }
 
+    public function createQuestions(array $data)
+    {
+        
+    }
+
     public function getNewQuestion()
     {
         DB::table('question_group')

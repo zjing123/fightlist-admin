@@ -4,12 +4,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @stop
 
-@section('page_title', __('voyager.generic.'.(isset($dataTypeContent->id) ? 'edit' : 'add')).' '.$dataType->display_name_singular)
+@section('page_title', __('voyager.generic.add') . ' Question')
 
 @section('page_header')
     <h1 class="page-title">
         <i class="{{ $dataType->icon }}"></i>
-        {{ __('voyager.generic.'.(isset($dataTypeContent->id) ? 'edit' : 'add')).' '.$dataType->display_name_singular }}
+        {{ __('voyager.generic.add').' Question' }}
     </h1>
     @include('voyager::multilingual.language-selector')
 @stop
@@ -17,18 +17,16 @@
 @section('content')
     <div class="page-content edit-add container-fluid">
         <div class="row">
-            <div class="col-md-12">
+            <div id="questionManger" class="col-md-12">
 
                 <div class="panel panel-bordered">
                     <!-- form start -->
                     <form role="form"
                           class="form-edit-add"
-                          action="@if(isset($dataTypeContent->id)){{ route('voyager.'.$dataType->slug.'.update', $dataTypeContent->id) }}@else{{ route('voyager.'.$dataType->slug.'.store') }}@endif"
-                          method="POST" enctype="multipart/form-data">
-                        <!-- PUT Method if we are editing -->
-                    @if(isset($dataTypeContent->id))
-                        {{ method_field("PUT") }}
-                    @endif
+                          action="{{ route('voyager.'.$dataType->slug.'.store') }}"
+                          method="POST" enctype="multipart/form-data"
+                          ref="form"
+                          @submit.prevent="stringifyColumns">
 
                     <!-- CSRF TOKEN -->
                         {{ csrf_field() }}
@@ -45,36 +43,11 @@
                                 </div>
                             @endif
 
-                        <!-- Adding / Editing -->
-                            @php
-                                $dataTypeRows = $dataType->{(isset($dataTypeContent->id) ? 'editRows' : 'addRows' )};
-                            @endphp
-
-                            @foreach($dataTypeRows as $row)
-                            <!-- GET THE DISPLAY OPTIONS -->
-                                @php
-                                    $options = json_decode($row->details);
-                                    $display_options = isset($options->display) ? $options->display : NULL;
-                                @endphp
-                                @if ($options && isset($options->formfields_custom))
-                                    @include('voyager::formfields.custom.' . $options->formfields_custom)
-                                @else
-                                    <div class="form-group @if($row->type == 'hidden') hidden @endif @if(isset($display_options->width)){{ 'col-md-' . $display_options->width }}@else{{ '' }}@endif" @if(isset($display_options->id)){{ "id=$display_options->id" }}@endif>
-                                        {{ $row->slugify }}
-                                        <label for="name">{{ $row->display_name }}</label>
-                                        @include('voyager::multilingual.input-hidden-bread-edit-add')
-                                        @if($row->type == 'relationship')
-                                            @include('voyager::formfields.relationship')
-                                        @else
-                                            {!! app('voyager')->formField($row, $dataType, $dataTypeContent) !!}
-                                        @endif
-
-                                        @foreach (app('voyager')->afterFormFields($row, $dataType, $dataTypeContent) as $after)
-                                            {!! $after->handle($row, $dataType, $dataTypeContent) !!}
-                                        @endforeach
-                                    </div>
-                                @endif
-                            @endforeach
+                            <!-- content -->
+                            <div>
+                                <add-question-editor v-for="column in columns" :column="column"></add-question-editor>
+                                <input type="hidden" :value="columnsJson" name="columns">
+                            </div>
 
                         </div><!-- panel-body -->
 
@@ -123,6 +96,27 @@
 @stop
 
 @section('javascript')
+    @include('voyager::questions.vue-components.add-question-editor')
+    <script>
+        new Vue({
+            el: '#questionManger',
+            data: {
+                columns: {},
+                originalColumns: {!! $columns !!},
+                columnsJson: ''
+            },
+            created() {
+                this.columns = JSON.parse(JSON.stringify(this.originalColumns))
+            },
+            methods: {
+                stringifyColumns() {
+                    this.columnsJson = JSON.stringify(this.columns);
+                    this.$nextTick(() => this.$refs.form.submit());
+                }
+            }
+        });
+    </script>
+
     <script>
         var params = {}
         var $image
