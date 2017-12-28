@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use TCG\Voyager\Traits\Translatable;
 use App\Models\Answer;
+use Webpatser\Uuid\Uuid;
 
 class Question extends Model
 {
     use Translatable;
+
+    protected $fillable = [
+        'title', 'group_id'
+    ];
 
     public function group()
     {

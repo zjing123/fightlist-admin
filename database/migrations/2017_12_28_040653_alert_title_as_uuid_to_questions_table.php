@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AlertTitleToQuestionsTable extends Migration
+class AlertTitleAsUuidToQuestionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,7 @@ class AlertTitleToQuestionsTable extends Migration
     public function up()
     {
         Schema::table('questions', function (Blueprint $table) {
-            $table->integer('title')->change();
+            $table->string('title')->change();
         });
     }
 

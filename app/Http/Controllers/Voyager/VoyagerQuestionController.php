@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers\Voyager;
 
+use App\Models\Answer;
+use App\Models\Question;
+use App\Models\TranslationEntry;
 use App\Models\TranslationLanguage;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use TCG\Voyager\Facades\Voyager;
 use Rny\ZhConverter\ZhConverter;
+use Webpatser\Uuid\Uuid;
+use Illuminate\Support\Facades\DB;
 
 class VoyagerQuestionController extends VoyagerBreadController
 {
@@ -63,7 +69,64 @@ class VoyagerQuestionController extends VoyagerBreadController
 
     public function store(Request $request)
     {
-        $columns = json_decode($request->columns);
+        return redirect()->route('voyager.questions.index');
+        $questions = $this->handleQuestions($request->columns);
+
+        if ($questions->isEmpty()) {
+            session()->flash('danger', 'qingjiancahshuruxinxi');
+            return redirect()->back()->withInput();
+        }
+
+        DB::beginTransaction();
+
+        try{
+            $title = Uuid::generate(4)->string;
+            $question_id = DB::table('questions')->insertGetId([
+                'title' => $title,
+                'group_id' => $request->group_id ? $request->group_id : 4
+            ]);
+
+            $translations = [];
+
+            foreach ($questions as $item) {
+                $translations[] = [
+                    'translation_id' => $title,
+                    'lang' => $item['lang'],
+                    'value' => $item['title']
+                ];
+
+                foreach ($item['answers'] as $val) {
+                    $title = Uuid::generate(4)->string;
+                    $answer = Answer::create([
+                        'title' => $title,
+                        'question_id' => $question_id,
+                        'score' => $val['score']
+                    ]);
+
+                    $translations[] = [
+                        'translation_id' => $answer->title,
+                        'lang' => $item['lang'],
+                        'value' => $val['title']
+                    ];
+                }
+            }
+
+            DB::table('translation_entries')->insert($translations);
+
+            //DB::commit();
+        }catch (QueryException $e) {
+            DB::rollBack();
+            session()->flash('danger', 'tianjiadaoshujukushibai'. $e->getMessage());
+            return redirect()->back()->withInput();
+        }
+
+        session()->flash('success', 'tianjiachengg');
+        return redirect()->route('voyager.questions.index');
+    }
+
+    protected function handleQuestions($columns)
+    {
+        $columns = json_decode($columns);
         $questions = [];
         $question_cn = [];
         foreach ($columns as $column) {
@@ -72,7 +135,9 @@ class VoyagerQuestionController extends VoyagerBreadController
                 'answers' => $column->answers,
                 'lang' => $column->lang
             ];
+
             $questions[] = $question;
+
             if ($column->lang == 'zh_CN') {
                 $question_cn = $question;
             }
@@ -91,11 +156,36 @@ class VoyagerQuestionController extends VoyagerBreadController
             ];
         }
 
-        print_r($questions);
+        foreach ($questions as &$question) {
+            $question['answers'] = $this->handleAnswers($question['answers']);
+        }
+        unset($question);
+
+        return collect($questions);
     }
 
     protected function handleAnswers($answers)
     {
+        $answers = explode(',', $answers);
+        if (is_array($answers)) {
 
+            $answers = collect($answers)->reject(function ($value, $key) {
+                return empty($value);
+            })->map(function($item, $key) {
+                $answer = explode(':', $item);
+
+                $return = [];
+                if (!empty($answer[0]) && !empty($answer[1])) {
+                    $return['title'] = $answer[0];
+                    $return['score'] = $answer[1];
+                }
+
+                return collect($return);
+            })->reject(function($value, $key){
+                return empty($value);
+            });
+        }
+
+        return $answers;
     }
 }

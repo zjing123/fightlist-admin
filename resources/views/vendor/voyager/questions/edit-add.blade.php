@@ -26,6 +26,7 @@
                           action="{{ route('voyager.'.$dataType->slug.'.store') }}"
                           method="POST" enctype="multipart/form-data"
                           ref="form"
+                          @keydown.enter.prevent
                           @submit.prevent="stringifyColumns">
 
                     <!-- CSRF TOKEN -->
@@ -33,15 +34,9 @@
 
                         <div class="panel-body">
 
-                            @if (count($errors) > 0)
-                                <div class="alert alert-danger">
-                                    <ul>
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
+                            <!-- errors and messages -->
+                            @include('voyager::shared._errors')
+                            @include('voyager::shared._messages')
 
                             <!-- content -->
                             <div>
@@ -103,15 +98,21 @@
             data: {
                 columns: {},
                 originalColumns: {!! $columns !!},
-                columnsJson: ''
+                columnsJson: {!! old('columns') ? old('columns') : "''" !!}
             },
             created() {
-                this.columns = JSON.parse(JSON.stringify(this.originalColumns))
+                if (!!this.columnsJson) {
+                    this.columns = JSON.parse(JSON.stringify(this.columnsJson))
+                } else {
+                    this.columns = JSON.parse(JSON.stringify(this.originalColumns))
+                }
+                console.log(this.columnsJson)
             },
             methods: {
                 stringifyColumns() {
                     this.columnsJson = JSON.stringify(this.columns);
-                    this.$nextTick(() => this.$refs.form.submit());
+                    console.log(this.$refs)
+                    //this.$nextTick(() => this.$refs.form.submit());
                 }
             }
         });
