@@ -113,8 +113,7 @@
             methods: {
                 stringifyColumns($event) {
                     this.columnsJson = JSON.stringify(this.columns);
-                    console.log(this.$refs.form)
-                    this.$nextTick(() => this.$refs.form.submit());
+                    //this.$nextTick(() => this.$refs.form.submit());
                 }
             }
         });

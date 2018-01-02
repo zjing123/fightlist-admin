@@ -6,6 +6,7 @@ use App\Models\Answer;
 use App\Models\Question;
 use App\Models\TranslationEntry;
 use App\Models\TranslationLanguage;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -85,9 +86,15 @@ class VoyagerQuestionController extends VoyagerBreadController
         DB::beginTransaction();
         try{
             $title = Uuid::generate(4)->string;
-            $question_id = DB::table('questions')->insertGetId([
+//            $question_id = DB::table('questions')->insertGetId([
+//                'title' => $title,
+//                'group_id' => $request->group_id ? $request->group_id : 1,
+//                'created_at' => Carbon::now(),
+//                'created_at' => Carbon::now()
+//            ]);
+            $question = Question::create([
                 'title' => $title,
-                'group_id' => $request->group_id ? $request->group_id : 4
+                'group_id' => $request->group_id ? $request->group_id : 1,
             ]);
 
             $translations = [];
@@ -96,21 +103,25 @@ class VoyagerQuestionController extends VoyagerBreadController
                 $translations[] = [
                     'translation_id' => $title,
                     'lang' => $item['lang'],
-                    'value' => $item['title']
+                    'value' => $item['title'],
+                    'created_at' => Carbon::now(),
+                    'created_at' => Carbon::now()
                 ];
 
                 foreach ($item['answers'] as $val) {
                     $title = Uuid::generate(4)->string;
                     $answer = Answer::create([
                         'title' => $title,
-                        'question_id' => $question_id,
+                        'question_id' => $question->id,
                         'score' => $val['score']
                     ]);
 
                     $translations[] = [
                         'translation_id' => $answer->title,
                         'lang' => $item['lang'],
-                        'value' => $val['title']
+                        'value' => $val['title'],
+                        'created_at' => Carbon::now(),
+                        'created_at' => Carbon::now()
                     ];
                 }
             }
