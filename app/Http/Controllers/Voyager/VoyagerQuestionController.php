@@ -69,16 +69,20 @@ class VoyagerQuestionController extends VoyagerBreadController
 
     public function store(Request $request)
     {
-        return redirect()->route('voyager.questions.index');
+        $token = $request->input('token');
+        if (empty($request->session()->get($token))) {
+            session()->flash('danger', '重复添加');
+            return redirect()->route('voyager.questions.index');
+        }
+
         $questions = $this->handleQuestions($request->columns);
 
         if ($questions->isEmpty()) {
-            session()->flash('danger', 'qingjiancahshuruxinxi');
+            session()->flash('danger', '请检查输入内容');
             return redirect()->back()->withInput();
         }
 
         DB::beginTransaction();
-
         try{
             $title = Uuid::generate(4)->string;
             $question_id = DB::table('questions')->insertGetId([
@@ -113,14 +117,14 @@ class VoyagerQuestionController extends VoyagerBreadController
 
             DB::table('translation_entries')->insert($translations);
 
-            //DB::commit();
+            DB::commit();
         }catch (QueryException $e) {
             DB::rollBack();
-            session()->flash('danger', 'tianjiadaoshujukushibai'. $e->getMessage());
+            session()->flash('danger', '添加到数据库失败'. $e->getMessage());
             return redirect()->back()->withInput();
         }
 
-        session()->flash('success', 'tianjiachengg');
+        session()->flash('success', '添加成功');
         return redirect()->route('voyager.questions.index');
     }
 

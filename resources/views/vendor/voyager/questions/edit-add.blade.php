@@ -27,7 +27,7 @@
                           method="POST" enctype="multipart/form-data"
                           ref="form"
                           @keydown.enter.prevent
-                          @submit.prevent="stringifyColumns">
+                          @submit.prevent="stringifyColumns()">
 
                     <!-- CSRF TOKEN -->
                         {{ csrf_field() }}
@@ -95,10 +95,12 @@
     <script>
         new Vue({
             el: '#questionManger',
-            data: {
-                columns: {},
-                originalColumns: {!! $columns !!},
-                columnsJson: {!! old('columns') ? old('columns') : "''" !!}
+            data () {
+                return {
+                    columns: {},
+                    originalColumns: {!! $columns !!},
+                    columnsJson: {!! old('columns') ? old('columns') : "''" !!}
+                }
             },
             created() {
                 if (!!this.columnsJson) {
@@ -109,10 +111,10 @@
                 console.log(this.columnsJson)
             },
             methods: {
-                stringifyColumns() {
+                stringifyColumns($event) {
                     this.columnsJson = JSON.stringify(this.columns);
-                    console.log(this.$refs)
-                    //this.$nextTick(() => this.$refs.form.submit());
+                    console.log(this.$refs.form)
+                    this.$nextTick(() => this.$refs.form.submit());
                 }
             }
         });

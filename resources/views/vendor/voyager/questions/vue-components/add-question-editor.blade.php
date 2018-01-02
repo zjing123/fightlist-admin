@@ -3,7 +3,8 @@
 <div class="form-group" style="margin-top:20px;">
     <h3 v-text="column.title"></h3>
     <label :for="column.name.question">Question</label>
-    <input required
+    <input
+            {{--required--}}
            type="text"
            :data-name="column.name.question"
            class="form-control"
@@ -14,7 +15,7 @@
 
     <label :for="column.name.answer">Answer</label>
     <textarea
-            required
+            {{--required--}}
             class="form-control"
             :data-name="column.name.answer"
             :name="column.name.answer"
