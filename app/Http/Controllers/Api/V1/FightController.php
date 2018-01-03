@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\Answer;
 use App\Models\Question;
 use App\Models\QuestionGroup;
 use Illuminate\Cache\Repository;
@@ -44,14 +45,22 @@ class FightController extends Controller
             return $this->error('没有更多的问题了');
         }
 
-        //DB::connection()->enableQueryLog();
-        //print_r(DB::getQueryLog());
-        $questions = QuestionGroup::find($groupId)->questions()->get();
-        foreach ($questions as &$question) {
-            $question->answers = $question->answers()->get();
-        }
-        unset($question);//去掉引用
+        $lang = $request->get('lang', 'zh_CN');
 
+//        DB::connection()->enableQueryLog();
+//
+//        $questions = QuestionGroup::find($groupId)->questions()->get();
+//        foreach ($questions as $question) {
+//            $question->title = $question->entries;
+//        }
+
+        $questions = Question::getQuestionsByLang($groupId, $lang);
+
+//        foreach ($questions as &$question) {
+//            $question->answers = $question->answers()->get();
+//        }
+//        unset($question);//去掉引用
+//
         $data = [
             'questions' => $questions,
             'group' => $groupId
@@ -83,12 +92,13 @@ class FightController extends Controller
             $results = [];
             foreach ($fightRecords as $record) {
                 $result = [];
-                $question = Question::find($record->question_id);
+
+                $question = Question::get($record->question_id);
                 if ($question) {
                     $result['id'] = $question->id;
                     $result['title'] = $question->title;
                     $result['answers'] = unserialize($record->answers);
-                    $result['right'] = $question->answers()->get(['title', 'score']);
+                    $result['right'] = Answer::getAnswers($question->id);
                     $results[] = $result;
                 } else {
                     continue;

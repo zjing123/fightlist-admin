@@ -78,6 +78,8 @@ class VoyagerQuestionController extends VoyagerBreadController
 
         $questions = $this->handleQuestions($request->columns);
 
+//        print_r($questions);exit;
+
         if ($questions->isEmpty()) {
             session()->flash('danger', '请检查输入内容');
             return redirect()->back()->withInput();
@@ -98,30 +100,32 @@ class VoyagerQuestionController extends VoyagerBreadController
             ]);
 
             $translations = [];
+            $translationIds = $this->generateUuid(count($questions[0]['answers']));
 
-            foreach ($questions as $item) {
+            foreach ($questions as $key => $item) {
                 $translations[] = [
                     'translation_id' => $title,
                     'lang' => $item['lang'],
                     'value' => $item['title'],
                     'created_at' => Carbon::now(),
-                    'created_at' => Carbon::now()
+                    'updated_at' => Carbon::now()
                 ];
 
-                foreach ($item['answers'] as $val) {
-                    $title = Uuid::generate(4)->string;
-                    $answer = Answer::create([
-                        'title' => $title,
-                        'question_id' => $question->id,
-                        'score' => $val['score']
-                    ]);
+                foreach ($item['answers'] as $k =>  $val) {
+                    if ($key === 0) {
+                        $answer = Answer::create([
+                            'title' => $translationIds[$k],
+                            'question_id' => $question->id,
+                            'score' => $val['score']
+                        ]);
+                    }
 
                     $translations[] = [
-                        'translation_id' => $answer->title,
+                        'translation_id' => $translationIds[$k],
                         'lang' => $item['lang'],
                         'value' => $val['title'],
                         'created_at' => Carbon::now(),
-                        'created_at' => Carbon::now()
+                        'updated_at' => Carbon::now()
                     ];
                 }
             }
@@ -202,5 +206,15 @@ class VoyagerQuestionController extends VoyagerBreadController
         }
 
         return $answers;
+    }
+
+    protected function generateUuid($num = 1)
+    {
+        $uuids = [];
+        for ($i = 0; $i < $num; $i++){
+            $uuids[] = Uuid::generate(4)->string;
+        }
+
+        return $uuids;
     }
 }
