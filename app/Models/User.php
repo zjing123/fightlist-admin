@@ -34,36 +34,13 @@ class User extends \TCG\Voyager\Models\User
         return self::where('name', $username)->first();
     }
 
-    /**
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function fights()
     {
-        return $this->hasMany(Fight::class);
-    }
-
-    public function fightings()
-    {
-        return $this->hasMany(Fight::class, 'to_user_id');
+        return $this->fightRecords()->with(['fight', 'user'])->get();
     }
 
     public function fightRecords()
     {
         return $this->hasMany(FightRecord::class);
-    }
-
-    public function fight($user_ids)
-    {
-        if (!is_array($user_ids)) {
-            $user_ids = compact('user_ids');
-        }
-
-        $this->fights();
-    }
-
-    public function isFight($group_id)
-    {
-        return $this->fights->contains('group_id', $group_id);
     }
 }

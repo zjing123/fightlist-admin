@@ -14,4 +14,9 @@ class FightRecord extends Model
     {
         return $this->belongsTo(Fight::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

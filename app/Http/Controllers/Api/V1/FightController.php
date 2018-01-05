@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\Answer;
 use App\Models\Question;
 use App\Models\QuestionGroup;
+use App\Models\TranslationEntry;
 use Illuminate\Cache\Repository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -26,17 +27,29 @@ class FightController extends Controller
 
     public function index(Request $request)
     {
-        $fights = $request->user()->fights()->with('user')->take(5)->get();
-        $fightings = $request->user()->fightings()->with('user')->get();
+        $fights = $request->user()->fights();
         return $this->success([
-            'fights' => $fights,
-            'fightings' => $fightings
+            'fights' => $fights
         ]);
     }
 
     public function store(Request $request)
     {
-        $usedGroupIds = $request->user()->fights()->pluck('group_id');
+
+        DB::connection()->enableQueryLog();
+        $result = DB::table('questions')
+            ->leftJoin('translation_entries', 'translation_entries.translation_id', '=', 'questions.title')
+            ->where('translation_entries.translation_id', '0dcd93b4-3951-4847-a2a9-82e4994edc18')
+            ->where(function ($query) {
+                $query->select('count(*)')
+                    ->from(with(new TranslationEntry)->getTable())
+                    ->where('translation_entries.translation_id', '0dcd93b4-3951-4847-a2a9-82e4994edc18');
+            }, '>', 1)
+            ->get();
+
+            print_r(DB::connection()->getQueryLog());
+
+        /*$usedGroupIds = $request->user()->fights()->pluck('group_id');
         $groupId = DB::table('question_groups')
             ->whereNotIn('id', $usedGroupIds)
             ->value('id');
@@ -82,7 +95,7 @@ class FightController extends Controller
             }
         } else {
             return $this->error('发生错误');
-        }
+        }*/
     }
 
     public function show(Request $request)
