@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class FightRecord extends Model
 {
     protected $fillable = [
-        'question_id', 'answers', 'score', 'finished'
+        'fight_id','user_id', 'answers', 'score', 'finished', 'lang'
     ];
 
     public function fight()

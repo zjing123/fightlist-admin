@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+Use Illuminate\Support\Facades\DB;
 
 class Fight extends Model
 {
+    const DEFAULT_COUNT = 10;
+
     protected $fillable = [
-        'to_user_id', 'type', 'score', 'group_id'
+        'type', 'group_id', 'count'
     ];
 
     public function records()
@@ -27,5 +30,22 @@ class Fight extends Model
     public function isRecord($question_id)
     {
         return $this->records->contains('question_id', $question_id);
+    }
+
+    public static function getFight($user_id)
+    {
+        $usedGroupIds = DB::table('fights')
+            ->leftJoin('fight_records', 'fights.id', '=', 'fight_records.fight_id')
+            ->where('fight_records.user_id', $user_id)
+            ->pluck('group_id');
+
+        $groupId = QuestionGroup::whereNotIn('id', $usedGroupIds)->value('id');
+
+        $fight = self::where([
+            ['group_id', '=', $groupId],
+            ['count', '<',  self::DEFAULT_COUNT]
+        ])->get();
+
+        return $fight;
     }
 }

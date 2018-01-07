@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\QuestionGroup;
 use App\Models\TranslationEntry;
 use Illuminate\Cache\Repository;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Fight;
@@ -37,17 +38,94 @@ class FightController extends Controller
     {
 
         DB::connection()->enableQueryLog();
-        $result = DB::table('questions')
-            ->leftJoin('translation_entries', 'translation_entries.translation_id', '=', 'questions.title')
-            ->where('translation_entries.translation_id', '0dcd93b4-3951-4847-a2a9-82e4994edc18')
-            ->where(function ($query) {
-                $query->select('count(*)')
-                    ->from(with(new TranslationEntry)->getTable())
-                    ->where('translation_entries.translation_id', '0dcd93b4-3951-4847-a2a9-82e4994edc18');
-            }, '>', 1)
-            ->get();
 
-            print_r(DB::connection()->getQueryLog());
+        $lang = $request->get('lang', 'zh_CN');
+        $type = $request->get('type', 1);
+
+        $usedGroupIds = DB::table('fights')
+            ->leftJoin('fight_records', 'fights.id', '=', 'fight_records.fight_id')
+            ->where('fight_records.user_id', $request->user()->id)
+            ->where('fights.type', $type)
+            ->pluck('group_id');
+
+//        print_r(DB::connection()->getQueryLog());
+//exit;
+        //return $usedGroupIds;
+        $groupId = QuestionGroup::whereNotIn('id', $usedGroupIds)->value('id');
+        if (empty($groupId)) {
+            return $this->error('no more question');
+        }
+
+        $record = null;
+        if ($type == 1) {
+            DB::beginTransaction();
+            try{
+                $fight = Fight::create([
+                    'group_id' => $groupId,
+                    'type' => $type,
+                    'count' => 1
+                ]);
+
+                $record = FightRecord::create([
+                    'fight_id' => $fight->id,
+                    'user_id' => $request->user()->id,
+                    'lang' => $lang
+                ]);
+
+                DB::commit();
+            } catch (QueryException $e) {
+                DB::rollback();
+                return $this->error('create game failed');
+            }
+        } else if ($type == 2) {
+            $fight = Fight::where([
+                ['group_id', '=', $groupId],
+                ['count', '<',  Fight::DEFAULT_COUNT],
+                ['type', '=', $type]
+            ])->first();
+
+            DB::beginTransaction();
+            try{
+
+                if (empty($fight)) {
+                    $fight = Fight::create([
+                        'group_id' => $groupId,
+                        'type' => $type,
+                        'count' => 1
+                    ]);
+                } else {
+                    //update count
+                    $fight->count = $fight->count + 1;
+                    $fight->save();
+                }
+
+                $record = FightRecord::create([
+                    'fight_id' => $fight->id,
+                    'user_id' => $request->user()->id,
+                    'lang' => $lang
+                ]);
+
+                DB::commit();
+            } catch (QueryException $e) {
+                DB::rollback();
+                return $this->error('create game failed');
+            }
+        } else {
+            return $this->error('failed params');
+        }
+
+        $questions = $questions = Question::getQuestionsByLang($groupId, $lang);
+
+        $data = [
+            'questions' => $questions,
+            'record_id' => $record->id
+        ];
+
+        return $this->success($data);
+
+
+
+      // print_r($questions);
 
         /*$usedGroupIds = $request->user()->fights()->pluck('group_id');
         $groupId = DB::table('question_groups')
@@ -100,28 +178,44 @@ class FightController extends Controller
 
     public function show(Request $request)
     {
-        $fightRecords = Fight::find((int)$request->fight)->records;
-        if($fightRecords) {
-            $results = [];
-            foreach ($fightRecords as $record) {
-                $result = [];
-
-                $question = Question::get($record->question_id);
-                if ($question) {
-                    $result['id'] = $question->id;
-                    $result['title'] = $question->title;
-                    $result['answers'] = unserialize($record->answers);
-                    $result['right'] = Answer::getAnswers($question->id);
-                    $results[] = $result;
-                } else {
-                    continue;
-                }
-            }
-
-            return $this->success(['results' => $results]);
-        } else {
+//        DB::connection()->enableQueryLog();
+//        print_r(DB::connection()->getQueryLog());
+        $fight = FightRecord::with('fight')->where('id', $request->fight)->get()->first();
+        if (empty($fight)) {
             return $this->error('没有找到记录');
         }
+
+        $questions = Question::getQuestionsByLang($fight->fight->group_id, $fight->lang);
+
+        $result =[
+            'results' => unserialize($fight->answers),
+            'rightResults' => $questions
+        ];
+
+        return $this->success($result);
+
+//        $fightRecords = Fight::find((int)$request->fight)->records;
+//        if($fightRecords) {
+//            $results = [];
+//            foreach ($fightRecords as $record) {
+//                $result = [];
+//
+//                $question = Question::get($record->question_id);
+//                if ($question) {
+//                    $result['id'] = $question->id;
+//                    $result['title'] = $question->title;
+//                    $result['answers'] = unserialize($record->answers);
+//                    $result['right'] = Answer::getAnswers($question->id);
+//                    $results[] = $result;
+//                } else {
+//                    continue;
+//                }
+//            }
+//
+//            return $this->success(['results' => $results]);
+//        } else {
+//            return $this->error('没有找到记录');
+//        }
     }
 
 }
