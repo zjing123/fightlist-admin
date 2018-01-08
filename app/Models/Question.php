@@ -48,7 +48,7 @@ class Question extends Model
             ->leftJoin('translation_entries as t', 't.translation_id', '=', 'q.title')
             ->select('q.id', 't.value as title')
             ->where('t.lang', $lang)
-            ->where('questions.group_id', $group_id)
+            ->where('q.group_id', $group_id)
             ->get();
 
         foreach ($questions as &$question) {
