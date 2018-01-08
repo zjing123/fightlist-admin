@@ -48,9 +48,6 @@ class FightController extends Controller
             ->where('fights.type', $type)
             ->pluck('group_id');
 
-//        print_r(DB::connection()->getQueryLog());
-//exit;
-        //return $usedGroupIds;
         $groupId = QuestionGroup::whereNotIn('id', $usedGroupIds)->value('id');
         if (empty($groupId)) {
             return $this->error('no more question');
