@@ -22,3 +22,12 @@ Route::group(['as' => 'api.', 'namespace' => 'Api\V1', 'middleware' => ['auth:ap
     Route::resource('fights', 'FightController');
     Route::resource('fightrecords', 'FightRecordController');
 });
+
+//user login,register
+Route::group(['as' => 'api.', 'namespace' => 'Api\V1\Auth'], function () {
+    Route::post('register', 'RegisterController@register')->name('register');
+    Route::post('login', 'LoginController@login')->name('login');
+    Route::post('refresh', 'LoginController@refresh')->name('refresh');
+});
+
+
