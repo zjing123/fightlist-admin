@@ -50,7 +50,9 @@ class FightController extends Controller
 
         $groupId = QuestionGroup::whereNotIn('id', $usedGroupIds)->value('id');
         if (empty($groupId)) {
-            return $this->error('no more question');
+            //取消限制
+            $groupId = 1;
+            //return $this->error('no more question');
         }
 
         $record = null;
