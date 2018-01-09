@@ -31,13 +31,13 @@ trait IssueTokenTrait{
 
             $response = $client->request('POST', $url, ['form_params' => $params]);
         } catch (RequestException $exception) {
-            throw new UnauthorizedException('请求失败,服务器错误');
+            throw new UnauthorizedException('SERVER_ERROR');
         }
 
         if ($response->getStatusCode() !== 401) {
             return json_decode($response->getBody()->getContents(), true);
         }
 
-        throw new UnauthorizedException('账号和密码错误');
+        throw new UnauthorizedException('ACCOUNT_OR_PASSWORD_ERROR');
     }
 }
