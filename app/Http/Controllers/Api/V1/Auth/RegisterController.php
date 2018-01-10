@@ -38,6 +38,10 @@ class RegisterController extends Controller
             'password' => bcrypt(request('password'))
         ]);
 
+        if (empty($user)) {
+            $this->failed('注册失败!');
+        }
+
         try {
             $tokens = $this->issueToken($request, 'password');
         } catch (UnauthorizedException $e) {

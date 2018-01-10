@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\UnauthorizedException;
 
 trait IssueTokenTrait{
@@ -25,7 +24,7 @@ trait IssueTokenTrait{
             ];
 
             if($grantType !== 'social'){
-                $params['username'] = $request->name ?: $request->email;
+                $params['username'] = $request->email;
                 $params['password'] = $request->password;
             }
 
