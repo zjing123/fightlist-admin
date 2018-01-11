@@ -34,9 +34,9 @@ class User extends \TCG\Voyager\Models\User
 //        return self::where('name', $username)->first();
 //    }
 
-    public function fights()
+    public function fights($take = 5)
     {
-        return $this->fightRecords()->with(['fight', 'user'])->get();
+        return $this->fightRecords()->with(['fight', 'user'])->take($take)->get();
     }
 
     public function fightRecords()

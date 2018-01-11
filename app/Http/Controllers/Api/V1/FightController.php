@@ -177,44 +177,12 @@ class FightController extends Controller
 
     public function show(Request $request)
     {
-//        DB::connection()->enableQueryLog();
-//        print_r(DB::connection()->getQueryLog());
-        $fight = FightRecord::with('fight')->where('id', $request->fight)->get()->first();
-        if (empty($fight)) {
-            return $this->error('没有找到记录');
+        $fightUsers = Fight::find($request->fight)->records()->with('user')->get();
+        if (empty($fightUsers)) {
+            return $this->error('没有相关数据');
         }
 
-        $questions = Question::getQuestionsByLang($fight->fight->group_id, $fight->lang);
-
-        $result =[
-            'results' => unserialize($fight->answers),
-            'rightResults' => $questions
-        ];
-
-        return $this->success($result);
-
-//        $fightRecords = Fight::find((int)$request->fight)->records;
-//        if($fightRecords) {
-//            $results = [];
-//            foreach ($fightRecords as $record) {
-//                $result = [];
-//
-//                $question = Question::get($record->question_id);
-//                if ($question) {
-//                    $result['id'] = $question->id;
-//                    $result['title'] = $question->title;
-//                    $result['answers'] = unserialize($record->answers);
-//                    $result['right'] = Answer::getAnswers($question->id);
-//                    $results[] = $result;
-//                } else {
-//                    continue;
-//                }
-//            }
-//
-//            return $this->success(['results' => $results]);
-//        } else {
-//            return $this->error('没有找到记录');
-//        }
+        return $this->success(['results' => $fightUsers]);
     }
 
 }

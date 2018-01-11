@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Api\Helpers\Api\ApiResponse;
 use App\Models\FightRecord;
 use App\Models\QuestionGroup;
+use App\Models\Question;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -52,34 +53,24 @@ class FightRecordController extends Controller
         }
 
         return $this->success(['finished' => true]);
+    }
 
+    public function show(Request $request)
+    {
+        $fight = FightRecord::with('fight')->where('id', $request->fightrecord)->get()->first();
 
-//        $fight = $request->user()->fights()->find($request->fight_id);
-//        if(!$fight->isCompleted() && !$fight->isRecord($request->question_id)) {
-//            $record = $fight->records()->create([
-//                'question_id' => $request->question_id,
-//                'answers' => serialize($request->answers),
-//                'score' => $this->getTotal($request->answers),
-//                'finished' => $request->finished
-//            ]);
-//
-//            if ($record) {
-//                if ($fight->isCompleted()) {
-//                    $records = $fight->records()->get(['score']);
-//                    $total = 0;
-//                    foreach ($records as $record) {
-//                        $total += $record->score;
-//                    }
-//
-//                    $fight->score = $total;
-//                    $fight->save();
-//                }
-//
-//                return $this->success(['finished' => true]);
-//            }
-//        }
-//
-//        return $this->success(['finished' => false]);
+        if (empty($fight)) {
+            return $this->error('没有找到记录');
+        }
+
+        $questions = Question::getQuestionsByLang($fight->fight->group_id, $fight->lang);
+
+        $result =[
+            'results' => unserialize($fight->answers),
+            'rightResults' => $questions
+        ];
+
+        return $this->success($result);
     }
 
 
