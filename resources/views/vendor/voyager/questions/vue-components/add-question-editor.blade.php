@@ -13,13 +13,14 @@
            v-model="column.question"
            >
 
-    <label :for="column.name.answer">Answer</label>
+    <label :for="column.name.answer" v-show="column.showAnswer">Answer</label>
     <textarea
             {{--required--}}
             class="form-control"
             :data-name="column.name.answer"
             :name="column.name.answer"
             v-model="column.answers"
+            v-show="column.showAnswer"
     ></textarea>
 </div>
 

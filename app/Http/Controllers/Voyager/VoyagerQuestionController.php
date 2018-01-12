@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Voyager;
 
+use App\Libaries\Youdao\Translation;
 use App\Models\Answer;
 use App\Models\Question;
 use App\Models\TranslationEntry;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 
 class VoyagerQuestionController extends VoyagerBreadController
 {
+    const DEFAULT_SCORE = 1;
+
     protected $fillLanguage = ['zh_TW', 'zh_HK'];
 
     public function index(Request $request)
@@ -52,7 +55,8 @@ class VoyagerQuestionController extends VoyagerBreadController
                 ],
                 'question' => '',
                 'answers' => '',
-                'lang' => $language->locale
+                'lang' => $language->locale,
+                'showAnswer' => $language->locale == 'en' ? false : true
             ];
 
             $columns[] = $column;
@@ -77,7 +81,7 @@ class VoyagerQuestionController extends VoyagerBreadController
         }
 
         $questions = $this->handleQuestions($request->columns);
-
+        print_r($questions); exit;
 //        print_r($questions);exit;
 
         if ($questions->isEmpty()) {
@@ -88,12 +92,7 @@ class VoyagerQuestionController extends VoyagerBreadController
         DB::beginTransaction();
         try{
             $title = Uuid::generate(4)->string;
-//            $question_id = DB::table('questions')->insertGetId([
-//                'title' => $title,
-//                'group_id' => $request->group_id ? $request->group_id : 1,
-//                'created_at' => Carbon::now(),
-//                'created_at' => Carbon::now()
-//            ]);
+
             $question = Question::create([
                 'title' => $title,
                 'group_id' => $request->group_id ? $request->group_id : 1,
@@ -148,18 +147,25 @@ class VoyagerQuestionController extends VoyagerBreadController
         $columns = json_decode($columns);
         $questions = [];
         $question_cn = [];
+        $question_en = [];
         foreach ($columns as $column) {
+            if($column->lang == 'en') {
+                $question_en['title'] = $column->question;
+                $question_en['lang'] = $column->lang;
+                continue;
+            }
+
             $question = [
                 'title' => $column->question,
                 'answers' => $column->answers,
                 'lang' => $column->lang
             ];
 
-            $questions[] = $question;
-
             if ($column->lang == 'zh_CN') {
                 $question_cn = $question;
             }
+
+            $questions[] = $question;
         }
 
         if (!empty($question_cn)) {
@@ -173,6 +179,14 @@ class VoyagerQuestionController extends VoyagerBreadController
                 'answers' => ZhConverter::zh2HK($question_cn['answers']),
                 'lang' => 'zh_HK'
             ];
+
+            if (!empty($question_en)) {
+                $translate = new Translation();
+                $translation = $translate->translate($question_cn['answers'], 'zh-CHS', 'EN');
+                $question_en['answers'] = trim($translation[0]);
+                $questions[] = $question_en;
+            }
+
         }
 
         foreach ($questions as &$question) {
@@ -185,24 +199,36 @@ class VoyagerQuestionController extends VoyagerBreadController
 
     protected function handleAnswers($answers)
     {
-        $answers = explode(',', $answers);
+        //切割字符串
+        $answers = preg_split("/[\s,]+/", $answers);
+        $answers = array_unique($answers);
+
         if (is_array($answers)) {
 
-            $answers = collect($answers)->reject(function ($value, $key) {
-                return empty($value);
-            })->map(function($item, $key) {
-                $answer = explode(':', $item);
+            $answers = collect($answers)
+                ->unique()
+                ->reject(function ($value, $key) {
+                    return empty($value);
+                })->map(function($item, $key) {
+                    $answer = explode(':', $item);
+                    $return = [];
 
-                $return = [];
-                if (!empty($answer[0]) && !empty($answer[1])) {
-                    $return['title'] = $answer[0];
-                    $return['score'] = $answer[1];
-                }
+                    if (is_array($answer)) {
+                        if (!empty($answer[0])) {
+                            if(!empty($answer[1])) {
+                                $return['title'] = trim($answer[0]);
+                                $return['score'] = trim($answer[1]);
+                            } else {
+                                $return['title'] = trim($answer[0]);
+                                $return['score'] = self::DEFAULT_SCORE;
+                            }
+                        }
+                    }
 
-                return collect($return);
-            })->reject(function($value, $key){
-                return empty($value);
-            });
+                    return collect($return);
+                })->reject(function($value, $key){
+                    return empty($value);
+                });
         }
 
         return $answers;
