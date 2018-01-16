@@ -21,6 +21,7 @@
             :name="column.name.answer"
             v-model="column.answers"
             v-show="column.showAnswer"
+            @keyup.space="addDelimiter"
     ></textarea>
 </div>
 
@@ -36,7 +37,9 @@
         },
         template: `@yield('add-question-editor-template')`,
         methods: {
-
+            addDelimiter () {
+                this.column.answers = this.column.answers + '|';
+            }
         }
     });
 </script>

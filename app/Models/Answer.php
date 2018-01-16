@@ -19,6 +19,11 @@ class Answer extends Model
         return $this->belongsTo(Question::class);
     }
 
+    public function entries()
+    {
+        return $this->hasMany(TranslationEntry::class, 'translation_id', 'title');
+    }
+
     public static function getAnswers($question_id, $lang = 'zh_CN')
     {
         return DB::table('answers as a')
