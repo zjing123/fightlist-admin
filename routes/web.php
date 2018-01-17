@@ -19,7 +19,17 @@ Route::get('/', function () {
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 
-//    Route::group(['middleware' => 'admin.user', 'namespace' => 'Api\Voyager'], function () {
-//        Route::post('admin/question/confirm', 'VoyagerQuestionController');
-//    });
+    Route::group(['middleware' => 'admin.user', 'namespace' => 'Voyager'], function () {
+        Route::get('questions/{question_id}/answer/{answer_id}/edit', 'VoyagerQuestionController@editAnswer')
+            ->name('voyager.questions.answer.edit');
+
+        Route::put('questions/{question_id}/answer/{answer_id}', 'VoyagerQuestionController@updateAnswer')
+            ->name('voyager.questions.answer.update');
+
+        Route::delete('questions/answer/{answer_id}', 'VoyagerQuestionController@destroyAnswer')
+            ->name('voyager.questions.answer.destroy');
+
+        Route::get('questions/answer', 'VoyagerQuestionController@indexAnswer')
+            ->name('voyager.questions.answer.index');
+    });
 });

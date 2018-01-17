@@ -209,26 +209,15 @@ class VoyagerQuestionController extends VoyagerBreadController
     {
         $slug = $this->getSlug($request);
 
-        $questions = Question::find($id)->with('answers')->get();
-        return $questions;
-        print_r($questions);exit;
-
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Compatibility with Model binding.
         $id = $id instanceof Model ? $id->{$id->getKeyName()} : $id;
 
-        $relationships = $this->getRelationships($dataType);
-        if (strlen($dataType->model_name) != 0) {
-            $model = app($dataType->model_name);
-            $dataTypeContent = call_user_func([$model->with($relationships), 'findOrFail'], $id);
-        } else {
-            // If Model doest exist, get data from table name
-            $dataTypeContent = DB::table($dataType->name)->where('id', $id)->first();
-        }
-
         // Replace relationships' keys for labels and create READ links if a slug is provided.
-        $dataTypeContent = $this->resolveRelations($dataTypeContent, $dataType, true);
+        $dataTypeContent = Question::with(['answers', 'entries'])->where('id', $id)->first();
+
+        $languages = TranslationLanguage::all();
 
         // If a column has a relationship associated with it, we do not want to show that field
         $this->removeRelationshipField($dataType, 'read');
@@ -245,7 +234,163 @@ class VoyagerQuestionController extends VoyagerBreadController
             $view = "voyager::$slug.read";
         }
 
+        return Voyager::view($view, compact('dataType', 'languages', 'dataTypeContent', 'isModelTranslatable'));
+    }
+
+    public function edit(Request $request, $id)
+    {
+        $slug = $this->getSlug($request);
+
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
+
+        // Compatibility with Model binding.
+        $id = $id instanceof Model ? $id->{$id->getKeyName()} : $id;
+
+        // If a column has a relationship associated with it, we do not want to show that field
+        $this->removeRelationshipField($dataType, 'edit');
+
+        $dataTypeContent = null;
+
+        // Check permission
+        $this->authorize('edit', $dataTypeContent);
+
+        // Check if BREAD is Translatable
+        $isModelTranslatable = is_bread_translatable($dataTypeContent);
+
+        $view = 'voyager::bread.edit-add';
+
+        if (view()->exists("voyager::$slug.edit-add")) {
+            $view = "voyager::$slug.edit-add";
+        }
+
         return Voyager::view($view, compact('dataType', 'dataTypeContent', 'isModelTranslatable'));
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $ids = [];
+        if (empty($id)) {
+            // Bulk delete, get IDs from POST
+            $ids = explode(',', $request->ids);
+        } else {
+            // Single item delete, get ID from URL or Model Binding
+            $ids[] = $id instanceof Model ? $id->{$id->getKeyName()} : $id;
+        }
+
+        DB::beginTransaction();
+        try{
+            foreach ($ids as $id) {
+                $question = Question::find($id);
+
+                $answers = Answer::where('question_id', $question->id)->get();
+                if ($answers) {
+                    foreach ($answers as $answer) {
+                        TranslationEntry::where('translation_id', $answer->title)->delete();
+                        $answer->delete();
+                    }
+                }
+
+                TranslationEntry::where('translation_id', $question->title)->delete();
+                $question->delete();
+            }
+
+            DB::commit();
+        } catch (QueryException $ex) {
+            throw $ex;
+            DB::rollback();
+            session()->flash('danger', "删除失败!<br/>" . $ex->getMessage());
+            return redirect()->route('voyager.questions.index');
+        }
+
+        session()->flash('success', "删除成功!");
+        return redirect()->route('voyager.questions.index');
+    }
+
+    public function editAnswer(Request $request, $question_id, $answer_id)
+    {
+        $slug = $this->getSlug($request);
+
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
+
+        $question = Question::with(['entries' => function($query) {
+            $query->where('lang', 'zh_CN')->first();
+        }])->where('id', $question_id)->first();
+
+        $languages = TranslationLanguage::all();
+
+        $answer = Answer::with('entries')->where('id', $answer_id)->first();
+
+        // Check if BREAD is Translatable
+        $isModelTranslatable = is_bread_translatable(Question::find($question_id));
+
+        $view = 'voyager::questions.edit-answer';
+
+        return Voyager::view($view, compact(
+            'dataType',
+            'question',
+            'answer',
+            'languages',
+            'isModelTranslatable'
+        ));
+    }
+
+    public function updateAnswer(Request $request, $question_id, $answer_id)
+    {
+        $language = TranslationLanguage::all();
+        $translation_id = $request->translation_id;
+
+        if (empty($translation_id)) {
+            session()->flash('success', 'translation_id无效!');
+            return redirect()->route('voyager.questions.show', $question_id);
+        }
+
+        if (empty($request->answer)) {
+            session()->flash('danger', '参数错误!');
+            return redirect()->route('voyager.questions.show', $question_id);
+        }
+
+        $translations = TranslationEntry::where('translation_id', $translation_id)->get();
+        if (empty($translations)) {
+            session()->flash('danger', 'translation_id不存在!');
+            return redirect()->route('voyager.questions.show', $question_id);
+        }
+
+        if (is_array($request->answer)) {
+            foreach ($request->answer as $lang => $val) {
+                TranslationEntry::where('translation_id', $translation_id)
+                    ->where('lang', $lang)
+                    ->update(['value' => $val]);
+            }
+        }
+
+        session()->flash('success', '修改成功');
+        return redirect()->route('voyager.questions.show', $question_id);
+    }
+
+    public function destroyAnswer(Request $request, $id)
+    {
+        if (empty($id)) {
+            session()->flash('danger', '参数错误!');
+            return redirect()->route('voyager.questions.show', $request->question_id);
+        }
+
+        DB::beginTransaction();
+        try{
+            $answer = Answer::find($id);
+
+            TranslationEntry::where('translation_id', $answer->title)->delete();
+            $answer->delete();
+
+            DB::commit();
+        } catch (QueryException $ex) {
+            throw $ex;
+            DB::rollback();
+            session()->flash('danger', "删除失败!<br/>" . $ex->getMessage());
+            return redirect()->route('voyager.questions.show', $request->question_id);
+        }
+
+        session()->flash('success', "删除成功!");
+        return redirect()->route('voyager.questions.show', $request->question_id);
     }
 
     protected function handleQuestions($columns)
