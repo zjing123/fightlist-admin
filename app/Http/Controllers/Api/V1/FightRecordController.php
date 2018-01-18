@@ -66,6 +66,7 @@ class FightRecordController extends Controller
         $questions = Question::getQuestionsByLang($fight->fight->group_id, $fight->lang);
 
         $result =[
+            'score' => $fight->score,
             'results' => unserialize($fight->answers),
             'rightResults' => $questions
         ];

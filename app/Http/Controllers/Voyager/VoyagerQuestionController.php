@@ -121,7 +121,7 @@ class VoyagerQuestionController extends VoyagerBreadController
                 'question' => '',
                 'answers' => '',
                 'lang' => $language->locale,
-                'showAnswer' => $language->locale == 'en' ? false : true
+                'showAnswer' => $language->locale == 'en' ? true : true
             ];
 
             $columns[] = $column;
@@ -146,6 +146,7 @@ class VoyagerQuestionController extends VoyagerBreadController
         }
 
         $questions = $this->handleQuestions($request->columns);
+        print_r($questions);exit;
 
         if ($questions->isEmpty()) {
             session()->flash('danger', '请检查输入内容');
@@ -431,11 +432,19 @@ class VoyagerQuestionController extends VoyagerBreadController
                 'lang' => 'zh_HK'
             ];
 
+//            if (!empty($question_en)) {
+//                $translate = new Translation();
+//                $translation = $translate->translate(str_replace("|", "|\n", $question_cn['answers']), 'zh-CHS', 'EN');
+//                print_r($translation);
+//                $question_en['answers'] = $translation == null ? '' : trim(str_replace("\n", '', $translation[0]));
+//                print_r($question_en['answers']);exit;
+//                $questions[] = $question_en;
+//            }
+
             if (!empty($question_en)) {
-                $translate = new Translation();
-                $translation = $translate->translate(str_replace("|", "|\n", $question_cn['answers']), 'zh-CHS', 'EN');
-                $question_en['answers'] = $translation == null ? '' : trim(str_replace("\n", '', $translation[0]));
-                $questions[] = $question_en;
+                $question_en['answers'] = $this->handleEnAnswers($question_cn['answers']);
+
+                print_r($question_en['answers']);exit;
             }
 
         }
@@ -446,6 +455,45 @@ class VoyagerQuestionController extends VoyagerBreadController
         unset($question);
 
         return collect($questions);
+    }
+
+    protected function handleEnAnswers($answers)
+    {
+        //切割字符串
+        $answers = preg_split("/[,|]+/", $answers);
+        $answers = array_unique($answers);
+
+        if (is_array($answers)) {
+            $translate = new Translation();
+            $answers = collect($answers)
+                ->unique()
+                ->reject(function ($value, $key) {
+                    return empty($value);
+                })->map(function($item, $key) use ($translate) {
+                    $answer = explode(':', $item);
+                    $return = [];
+
+                    if (is_array($answer)) {
+                        if (!empty($answer[0])) {
+
+                            $translation = $translate->translate(trim($answer[0]), 'zh-CHS', 'EN');
+                            if(!empty($answer[1])) {
+                                $return['title'] = trim($translation[0]);
+                                $return['score'] = trim($answer[1]);
+                            } else {
+                                $return['title'] = trim($translation[0]);
+                                $return['score'] = self::DEFAULT_SCORE;
+                            }
+                        }
+                    }
+
+                    return collect($return);
+                })->reject(function($value, $key){
+                    return empty($value);
+                });
+        }
+
+        return $answers;
     }
 
     protected function handleAnswers($answers)

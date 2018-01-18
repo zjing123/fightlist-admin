@@ -23,9 +23,12 @@
             v-show="column.showAnswer"
             @keyup.space="addDelimiter"
     ></textarea>
+    <input-tag></input-tag>
 </div>
 
 @endsection
+
+@include('voyager::questions.vue-components.input-tags')
 
 <script>
     Vue.component('add-question-editor', {

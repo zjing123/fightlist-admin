@@ -36,7 +36,7 @@ class User extends \TCG\Voyager\Models\User
 
     public function fights($take = 5)
     {
-        return $this->fightRecords()->with(['fight', 'user'])->take($take)->get();
+        return $this->fightRecords()->with(['fight', 'user'])->orderBy('created_at', 'DESC')->take($take)->get();
     }
 
     public function fightRecords()
