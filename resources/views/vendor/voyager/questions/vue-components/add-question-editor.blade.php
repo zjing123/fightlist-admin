@@ -14,16 +14,7 @@
            >
 
     <label :for="column.name.answer" v-show="column.showAnswer">Answer</label>
-    <textarea
-            {{--required--}}
-            class="form-control"
-            :data-name="column.name.answer"
-            :name="column.name.answer"
-            v-model="column.answers"
-            v-show="column.showAnswer"
-            @keyup.space="addDelimiter"
-    ></textarea>
-    <input-tag></input-tag>
+    <input-tag :tags="column.answers" @on-add-tag="onAdd"></input-tag>
 </div>
 
 @endsection
@@ -42,7 +33,15 @@
         methods: {
             addDelimiter () {
                 this.column.answers = this.column.answers + '|';
+            },
+            onAdd(tag) {
+                console.log('prev',tag)
+                this.$emit('on-add-answer', tag)
             }
         }
     });
 </script>
+
+@section('css')
+
+@endsection

@@ -2,7 +2,7 @@
 
 @section('css')
     <meta name="csrf-token" content="{{ csrf_token() }}">
-@stop
+@endsection
 
 @section('page_title', __('voyager.generic.add') . ' Question')
 
@@ -40,7 +40,7 @@
 
                             <!-- content -->
                             <div>
-                                <add-question-editor v-for="column in columns" :column="column"></add-question-editor>
+                                <add-question-editor v-for="column in columns" :column="column" @on-add-answer="addAnswer"></add-question-editor>
                                 <input type="hidden" :value="columnsJson" name="columns">
                             </div>
 
@@ -91,6 +91,7 @@
 @stop
 
 @section('javascript')
+    <script src="https://cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>
     @include('voyager::questions.vue-components.add-question-editor')
     <script>
         new Vue({
@@ -114,6 +115,40 @@
                 stringifyColumns($event) {
                     this.columnsJson = JSON.stringify(this.columns);
                     //this.$nextTick(() => this.$refs.form.submit());
+                },
+                addAnswer (answer) {
+                    //console.log('addAnswer', answer)
+                    console.log(this.columns)
+                    var _self = this;
+                    this.getEnglish(answer, function(translate) {
+                        _self.columns.en.answers.push(translate.trim())
+                        console.log('call', translate)
+                    })
+                },
+                getEnglish (query, callback) {
+                    var appKey = '3f4c3da5e9c22294';
+                    var appSecret = 'nvkki4jLqfMW6P2KiukabqLB3mWZQRBT';
+                    var salt = (new Date).getTime();
+                    var from = 'zh-CHS';
+                    var to = 'en';
+                    var str1 = appKey + query + salt +appSecret;
+                    var sign = md5(str1);
+                    $.ajax({
+                        url: 'http://openapi.youdao.com/api',
+                        type: 'post',
+                        dataType: 'jsonp',
+                        data: {
+                            q: query,
+                            appKey: appKey,
+                            salt: salt,
+                            from: from,
+                            to: to,
+                            sign: sign
+                        },
+                        success: function (data) {
+                            callback(data.translation[0]);
+                        }
+                    });
                 }
             }
         });

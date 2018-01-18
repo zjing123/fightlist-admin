@@ -119,12 +119,12 @@ class VoyagerQuestionController extends VoyagerBreadController
                     'answer' => 'answer_' . $language->locale
                 ],
                 'question' => '',
-                'answers' => '',
+                'answers' => [],
                 'lang' => $language->locale,
-                'showAnswer' => $language->locale == 'en' ? true : true
+                'showAnswer' => $language->locale == 'en' ? true : true,
             ];
 
-            $columns[] = $column;
+            $columns[$language->locale] = $column;
         }
         $columns = json_encode($columns);
 
