@@ -1,9 +1,8 @@
 @section('input-tags-template')
     <div @click="focusInput" v-bind:class="{'form-control-focus': isFocus}" class="form-control vue-input-tag-wrapper" >
         <span v-for="(tag, index) in tags" :key="index" class="input-tag">
-            <span contenteditable="isEdit" v-text="tag" ></span>
+            <span v-text="tag" ></span>
             <a v-if="!readOnly" @click.prevent.stop="remove(index)" class="remove"></a>
-            <input @click="editTag($event, index)"/>
         </span>
         <input class="new-tag"
                @blur="blurInput"
@@ -81,6 +80,7 @@
             remove (index) {
                 this.tags.splice(index, 1);
                 this.tagChange();
+                this.$emit('remove-tag', index);
             },
             removeLastTag () {
                 if (this.newTag) {
@@ -88,6 +88,7 @@
                 }
                 this.tags.pop();
                 this.tagChange();
+                this.$emit('remove-last-tag');
             },
             tagChange () {
                 if(this.onChange) {

@@ -14,7 +14,13 @@
            >
 
     <label :for="column.name.answer" v-show="column.showAnswer">Answer</label>
-    <input-tag :tags="column.answers" @on-add-tag="onAdd"></input-tag>
+    <input-tag
+            :tags="column.answers"
+            :readOnly="column.readOnly"
+            @on-add-tag="onAdd"
+            @remove-tag="onRemove"
+            @remove-last-tag="onRemoveLast">
+    </input-tag>
 </div>
 
 @endsection
@@ -37,6 +43,12 @@
             onAdd(tag) {
                 console.log('prev',tag)
                 this.$emit('on-add-answer', tag)
+            },
+            onRemove (index) {
+                this.$emit('on-remove-answer', index);
+            },
+            onRemoveLast () {
+                this.$emit('on-remove-last-answer');
             }
         }
     });
