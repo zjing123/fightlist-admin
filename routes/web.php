@@ -31,5 +31,8 @@ Route::group(['prefix' => 'admin'], function () {
 
         Route::get('questions/answer', 'VoyagerQuestionController@indexAnswer')
             ->name('voyager.questions.answer.index');
+
+        Route::post('questions/answer/update/multi', 'VoyagerQuestionController@updateMultiAnswer')
+            ->name('voyager.question.multi.update');
     });
 });

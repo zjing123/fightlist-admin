@@ -27,7 +27,7 @@
                           method="POST" enctype="multipart/form-data"
                           ref="form"
                           @keydown.enter.prevent
-                          @submit.prevent="stringifyColumns()">
+                          @submit.prevent="stringifyColumns">
 
                     <!-- CSRF TOKEN -->
                         {{ csrf_field() }}

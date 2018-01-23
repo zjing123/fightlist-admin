@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Mockery\Exception;
 use TCG\Voyager\Database\Schema\SchemaManager;
 use TCG\Voyager\Facades\Voyager;
 use Rny\ZhConverter\ZhConverter;
@@ -216,7 +217,8 @@ class VoyagerQuestionController extends VoyagerBreadController
         $id = $id instanceof Model ? $id->{$id->getKeyName()} : $id;
 
         // Replace relationships' keys for labels and create READ links if a slug is provided.
-        $dataTypeContent = Question::with(['answers', 'entries'])->where('id', $id)->first();
+        $dataTypeContent = Question::with('entries')->where('id', $id)->first();
+        $answers = $dataTypeContent->answers;
 
         $languages = TranslationLanguage::all();
 
@@ -235,7 +237,14 @@ class VoyagerQuestionController extends VoyagerBreadController
             $view = "voyager::$slug.read";
         }
 
-        return Voyager::view($view, compact('dataType', 'languages', 'dataTypeContent', 'isModelTranslatable'));
+        $table = [
+            'headers' => $languages->toArray(),
+            'body' => $answers->toArray()
+        ];
+
+        $table = json_encode($table);
+
+        return Voyager::view($view, compact('dataType', 'languages', 'dataTypeContent', 'isModelTranslatable', 'table'));
     }
 
     public function edit(Request $request, $id)
@@ -365,6 +374,35 @@ class VoyagerQuestionController extends VoyagerBreadController
         }
 
         session()->flash('success', '修改成功');
+        return redirect()->route('voyager.questions.show', $question_id);
+    }
+
+    public function updateMultiAnswer(Request $request)
+    {
+        $contents = $request->input('contents', '');
+        $question_id = $request->input('question_id', 1);
+        if (empty($contents)) {
+            session()->flash('danger', '参数错误');
+            return redirect()->back();
+        }
+
+        $contents = json_decode($contents, true);
+
+        $entries = [];
+        foreach ($contents as $content) {
+            foreach ($content as $val) {
+                $entries[] = [
+                    'id' => $val['id'],
+                    'value' => trim($val['value'])
+                ];
+            }
+        }
+
+        if(!app(TranslationEntry::class)->updateBatch($entries)) {
+            session()->flash('danger', 'update failed!');
+            return redirect()->back();
+        }
+
         return redirect()->route('voyager.questions.show', $question_id);
     }
 

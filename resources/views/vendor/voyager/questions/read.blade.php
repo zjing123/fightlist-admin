@@ -24,57 +24,58 @@
     <div class="page-content read container-fluid">
         <div class="row">
             <div class="col-md-12">
-
-                <div class="panel panel-bordered" style="padding-bottom:5px;">
+                <div id="content" class="panel panel-bordered" style="padding-bottom:5px;">
                     @include('voyager::shared._errors')
                     @include('voyager::shared._messages')
-
-                    <!-- form start -->
-                    <div class="panel-heading" style="border-bottom:0;">
-                        <h3 class="panel-title">问题:</h3>
-                    </div>
-                    <div class="panel-body" style="padding-top:0;">
-                        @foreach($dataTypeContent->entries as $entry)
-                            @if($entry->lang == 'zh_CN')
-                                {{ $entry->value }}
-                            @endif
-                        @endforeach
-                    </div>
-
-                    <div class="panel-heading" style="border-bottom:0;">
-                        <h3 class="panel-title">答案:</h3>
-                    </div>
-                    <div class="panel-body" style="padding-top:0;">
-                        <table class="table table-condensed table-hover">
-                            <thead>
-                            @foreach($languages as $language)
-                                <th>{{ $language->title }}</th>
+                    <form
+                            ref="form"
+                            action="{{ route('voyager.question.multi.update') }}"
+                            @submit.prevent="stringifyTable"
+                            @keydown.enter.prevent
+                            method="POST"
+                            enctype="multipart/form-data"
+                    >
+                        <!-- CSRF TOKEN -->
+                        {{ csrf_field() }}
+                        <!-- form start -->
+                        <div class="panel-heading" style="border-bottom:0;">
+                            <h3 class="panel-title">问题:</h3>
+                        </div>
+                        <div class="panel-body" style="padding-top:0;">
+                            @foreach($dataTypeContent->entries as $entry)
+                                @if($entry->lang == 'zh_CN')
+                                    {{ $entry->value }}
+                                @endif
                             @endforeach
-                                <th>Action</th>
-                            </thead>
-                            <tbody>
-                            @foreach($dataTypeContent->answers as $answer)
-                                <tr>
-                                    @foreach($languages as $language)
-                                        @foreach($answer->entries as $entry)
-                                            @if($entry->lang == $language->locale)
-                                            <td> {{ $entry->value }}</td>
-                                            @endif
-                                        @endforeach
-                                    @endforeach
-                                    <td class="no-sort no-click" id="bread-actions">
-                                        <a href="javascript:;" title="{{ __('voyager.generic.delete') }}" class="btn btn-sm btn-danger pull-right delete" data-id="{{ $answer->id }}" id="delete-{{ $answer->id }}">
-                                            <i class="voyager-trash"></i> <span class="hidden-xs hidden-sm">{{ __('voyager.generic.delete') }}</span>
-                                        </a>
-                                        <a href="{{ route('voyager.questions.answer.edit', [$dataTypeContent->id, $answer->id]) }}" title="{{ __('voyager.generic.edit') }}" class="btn btn-sm btn-primary pull-right edit">
-                                            <i class="voyager-edit"></i> <span class="hidden-xs hidden-sm">{{ __('voyager.generic.edit') }}</span>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                        </div>
+
+                        <div class="panel-heading" style="border-bottom:0;">
+                            <h3 class="panel-title">答案:
+                                <a
+                                    @click.stop="tiggleStatus"
+                                    v-text="editStatus ? cancelText : editText "
+                                    style="float: right;"
+                                    class="btn"
+                                    :class="[{'btn-danger': editStatus, 'delete': editStatus},{'btn-primary': !editStatus, edit: !editStatus}]"></a>
+                            </h3>
+
+                        </div>
+                        <div class="panel-body" style="padding-top:0;">
+                            <show-answers-editor :table="table" :question-id="questionId" :edit="editStatus"></show-answers-editor>
+                        </div>
+
+                        <input type="hidden" name="contents" v-model="tableJson"/>
+                        <input type="hidden" name="question_id" value="{{ $dataTypeContent->id }}"/>
+
+                        <div class="panel-footer">
+                            <button type="submit" v-if="editStatus" class="btn btn-primary save">{{ __('voyager.generic.update') }}</button>
+                            <a
+                                @click.stop="tiggleStatus"
+                                v-text="editStatus ? cancelText : editText "
+                                class="btn"
+                                :class="[{'btn-danger': editStatus, 'delete': editStatus},{'btn-primary': !editStatus, edit: !editStatus}]"></a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -105,6 +106,49 @@
 @stop
 
 @section('javascript')
+    @include('voyager::questions.vue-components.show-answers-editor')
+    <script>
+        new Vue({
+            el: '#content',
+            data () {
+                return {
+                    table: {},
+                    originalTable: {!! $table !!},
+                    tableJson: null,
+                    questionId: {!! $dataTypeContent->id !!},
+                    editStatus: false,
+                    editText: '编辑全部',
+                    cancelText: '取消编辑'
+                }
+            },
+            created() {
+                if (!!this.originalTable) {
+                    this.table = JSON.parse(JSON.stringify(this.originalTable))
+                }
+
+                console.log('questionId', this.questionId, typeof this.questionId)
+            },
+            methods: {
+                stringifyTable() {
+                    let content = this.table.body.map(item => item.entries);
+                    this.tableJson = JSON.stringify(content);
+                    this.$nextTick(() => this.$refs.form.submit());
+                },
+                tiggleStatus () {
+                    this.editStatus = !this.editStatus;
+                    console.log(this.editStatus)
+                }
+            },
+            watch: {
+                editStatus: {
+                    handle () {
+                        console.log(this.editStatus)
+                    }
+                }
+            }
+        });
+    </script>
+
     @if ($isModelTranslatable)
     <script>
         $(document).ready(function () {
