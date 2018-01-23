@@ -21,6 +21,9 @@
             @remove-tag="onRemove"
             @remove-last-tag="onRemoveLast">
     </input-tag>
+
+    <label :for="column.name.answer" v-show="column.showAnswer">Answer1</label>
+    <input-tags :tags="tags" @tags-changed="newTags => tags = newTags">
 </div>
 
 @endsection
@@ -34,6 +37,11 @@
                 type: Object,
                 required: true
             }
+        },
+        data () {
+          return {
+              tags: [1]
+          }
         },
         template: `@yield('add-question-editor-template')`,
         methods: {
