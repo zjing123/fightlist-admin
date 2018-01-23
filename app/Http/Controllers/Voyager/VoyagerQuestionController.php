@@ -122,7 +122,8 @@ class VoyagerQuestionController extends VoyagerBreadController
                 'question' => '',
                 'answers' => [],
                 'lang' => $language->locale,
-                'showAnswer' => $language->locale == 'en' ? true : true,
+                'showAnswer' => true,
+                'readOnly' => $language->locale == 'en' ? true : false,
             ];
 
             $columns[$language->locale] = $column;
@@ -147,7 +148,6 @@ class VoyagerQuestionController extends VoyagerBreadController
         }
 
         $questions = $this->handleQuestions($request->columns);
-        print_r($questions);exit;
 
         if ($questions->isEmpty()) {
             session()->flash('danger', '请检查输入内容');
@@ -437,14 +437,7 @@ class VoyagerQuestionController extends VoyagerBreadController
         $columns = json_decode($columns);
         $questions = [];
         $question_cn = [];
-        $question_en = [];
         foreach ($columns as $column) {
-            if($column->lang == 'en') {
-                $question_en['title'] = $column->question;
-                $question_en['lang'] = $column->lang;
-                continue;
-            }
-
             $question = [
                 'title' => $column->question,
                 'answers' => $column->answers,
@@ -459,34 +452,30 @@ class VoyagerQuestionController extends VoyagerBreadController
         }
 
         if (!empty($question_cn)) {
-            $questions[] = [
-                'title' => ZhConverter::zh2TW($question_cn['title']),
-                'answers' => ZhConverter::zh2TW($question_cn['answers']),
-                'lang' => 'zh_TW'
-            ];
-            $questions[] = [
-                'title' => ZhConverter::zh2HK($question_cn['title']),
-                'answers' => ZhConverter::zh2HK($question_cn['answers']),
-                'lang' => 'zh_HK'
-            ];
-
-//            if (!empty($question_en)) {
-//                $translate = new Translation();
-//                $translation = $translate->translate(str_replace("|", "|\n", $question_cn['answers']), 'zh-CHS', 'EN');
-//                print_r($translation);
-//                $question_en['answers'] = $translation == null ? '' : trim(str_replace("\n", '', $translation[0]));
-//                print_r($question_en['answers']);exit;
-//                $questions[] = $question_en;
-//            }
-
-            if (!empty($question_en)) {
-                $question_en['answers'] = $this->handleEnAnswers($question_cn['answers']);
-
-                print_r($question_en['answers']);exit;
+            $answers = [];
+            foreach ($question_cn['answers'] as $answer) {
+                $answers[] = ZhConverter::zh2TW($answer);
             }
 
+            $questions[] = [
+                'title' => ZhConverter::zh2TW($question_cn['title']),
+                'answers' => $answers,
+                'lang' => 'zh_TW'
+            ];
+
+            $answers = [];
+            foreach ($question_cn['answers'] as $answer) {
+                $answers[] = ZhConverter::zh2HK($answer);
+            }
+            $questions[] = [
+                'title' => ZhConverter::zh2HK($question_cn['title']),
+                'answers' => $answers,
+                'lang' => 'zh_HK'
+            ];
         }
 
+//        print_r($questions);exit;
+//
         foreach ($questions as &$question) {
             $question['answers'] = $this->handleAnswers($question['answers']);
         }
@@ -497,9 +486,11 @@ class VoyagerQuestionController extends VoyagerBreadController
 
     protected function handleEnAnswers($answers)
     {
-        //切割字符串
-        $answers = preg_split("/[,|]+/", $answers);
-        $answers = array_unique($answers);
+        if(!is_array($answers)) {
+            //切割字符串
+            $answers = preg_split("/[,|]+/", $answers);
+            $answers = array_unique($answers);
+        }
 
         if (is_array($answers)) {
             $translate = new Translation();
@@ -536,9 +527,11 @@ class VoyagerQuestionController extends VoyagerBreadController
 
     protected function handleAnswers($answers)
     {
-        //切割字符串
-        $answers = preg_split("/[,|]+/", $answers);
-        $answers = array_unique($answers);
+        if (!is_array($answers)) {
+            //切割字符串
+            $answers = preg_split("/[,|]+/", $answers);
+            $answers = array_unique($answers);
+        }
 
         if (is_array($answers)) {
             $answers = collect($answers)

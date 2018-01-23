@@ -40,7 +40,14 @@
 
                             <!-- content -->
                             <div>
-                                <add-question-editor v-for="column in columns" :column="column" @on-add-answer="addAnswer"></add-question-editor>
+                                <add-question-editor
+                                        v-for="column in columns"
+                                        :column="column"
+                                        @on-add-answer="addAnswer"
+                                        @on-remove-answer="removeAnswer"
+                                        @on-remove-last-answer="removeLastAnswer"
+                                >
+                                </add-question-editor>
                                 <input type="hidden" :value="columnsJson" name="columns">
                             </div>
 
@@ -124,6 +131,12 @@
                         _self.columns.en.answers.push(translate.trim())
                         console.log('call', translate)
                     })
+                },
+                removeAnswer (index) {
+                    this.columns.en.answers.splice(index, 1);
+                },
+                removeLastAnswer () {
+                    this.columns.en.answers.pop();
                 },
                 getEnglish (query, callback) {
                     var appKey = '3f4c3da5e9c22294';

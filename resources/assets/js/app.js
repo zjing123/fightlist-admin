@@ -37,6 +37,11 @@ Vue.component(
     require('./components/passport/PersonalAccessTokens.vue')
 );
 
+console.log(123)
+Vue.component(
+    'input-tags',
+    require('./components/vue-input-tags/index.vue')
+);
 
 const app = new Vue({
     el: '#app'

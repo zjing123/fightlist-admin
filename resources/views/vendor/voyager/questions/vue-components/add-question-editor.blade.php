@@ -14,7 +14,16 @@
            >
 
     <label :for="column.name.answer" v-show="column.showAnswer">Answer</label>
-    <input-tag :tags="column.answers" @on-add-tag="onAdd"></input-tag>
+    <input-tag
+            :tags="column.answers"
+            :readOnly="column.readOnly"
+            @on-add-tag="onAdd"
+            @remove-tag="onRemove"
+            @remove-last-tag="onRemoveLast">
+    </input-tag>
+
+    <label :for="column.name.answer" v-show="column.showAnswer">Answer1</label>
+    <input-tags :tags="tags" @tags-changed="newTags => tags = newTags">
 </div>
 
 @endsection
@@ -29,6 +38,11 @@
                 required: true
             }
         },
+        data () {
+          return {
+              tags: [1]
+          }
+        },
         template: `@yield('add-question-editor-template')`,
         methods: {
             addDelimiter () {
@@ -37,6 +51,12 @@
             onAdd(tag) {
                 console.log('prev',tag)
                 this.$emit('on-add-answer', tag)
+            },
+            onRemove (index) {
+                this.$emit('on-remove-answer', index);
+            },
+            onRemoveLast () {
+                this.$emit('on-remove-last-answer');
             }
         }
     });
