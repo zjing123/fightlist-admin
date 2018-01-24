@@ -2,5 +2,6 @@
     "/js/app.js": "/js/app.js",
     "/css/app.css": "/css/app.css",
     "/css/input-tags.css": "/css/input-tags.css",
+    "/js/vue.app.js": "/js/vue.app.js",
     "/js/create-tags.js": "/js/create-tags.js"
 }

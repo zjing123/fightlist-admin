@@ -319,6 +319,7 @@ export default {
 
   .tagsContainer {
     min-height: 100px;
+    height:auto;
   }
 
   .tagsContainer {
@@ -360,6 +361,10 @@ export default {
           display: none;
         }
       }
+
+        .tagItem:after,.tagItem:before {
+            box-sizing: content-box !important;
+        }
 
       .hidden {
         visibility: hidden;

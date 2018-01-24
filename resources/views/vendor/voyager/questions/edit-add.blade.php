@@ -98,6 +98,7 @@
 @stop
 
 @section('javascript')
+    <script type="text/javascript" src="{{ asset('js/vue.app.js') }}"></script>
     <script src="https://cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>
     @include('voyager::questions.vue-components.add-question-editor')
     <script>

@@ -82,7 +82,7 @@
             },
             getEditLink(answerId) {
                 let questionId = {!! $dataTypeContent->id !!}
-                return 'admin/questions/'+ this.questionId +'/answer/' + answerId + '/edit';
+                return '/admin/questions/'+ this.questionId +'/answer/' + answerId + '/edit';
             }
         },
         created () {

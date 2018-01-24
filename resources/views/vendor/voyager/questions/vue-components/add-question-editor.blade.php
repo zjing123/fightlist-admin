@@ -22,8 +22,8 @@
             @remove-last-tag="onRemoveLast">
     </input-tag>
 
-    <label :for="column.name.answer" v-show="column.showAnswer">Answer1</label>
-    <input-tags :tags="tags" @tags-changed="newTags => tags = newTags">
+    {{--<label :for="column.name.answer" v-show="column.showAnswer">Answer1</label>--}}
+    {{--<input-tags :tags="column.answers" @tags-changed="newTags => column.answers = newTags"></input-tags>--}}
 </div>
 
 @endsection
